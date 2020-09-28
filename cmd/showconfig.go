@@ -9,7 +9,6 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// NewShowConfigCmd returns the cobra command for generate
 func NewShowConfigCmd(v *viper.Viper) *cobra.Command {
 	return &cobra.Command{
 		Use:   "showconfig",

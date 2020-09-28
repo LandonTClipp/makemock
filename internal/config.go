@@ -1,6 +1,9 @@
 package internal
 
-import "github.com/spf13/viper"
+import (
+	"github.com/pkg/errors"
+	"github.com/spf13/viper"
+)
 
 // Version is the version of makemock
 var Version = "0.0.0-dev"
@@ -26,6 +29,7 @@ func GetConfigDefault() *Config {
 		Config:       "",
 		DisableColor: false,
 		LogLevel:     "info",
+		Packages:     make(map[string]Package),
 	}
 }
 
@@ -34,7 +38,7 @@ func GetConfigDefault() *Config {
 // will be initialized to a default value.
 func GetConfigFromViper(v *viper.Viper) (*Config, error) {
 	c := GetConfigDefault()
-	return c, viper.UnmarshalExact(c)
+	return c, errors.Wrapf(v.UnmarshalExact(c), "failed to unmarshal")
 }
 
 type Package struct {

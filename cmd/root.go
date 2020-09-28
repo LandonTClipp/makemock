@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/LandonTClipp/makemocks/internal"
 	"github.com/spf13/cobra"
@@ -18,52 +17,59 @@ var rootCmd = &cobra.Command{
 	Use:     "makemocks",
 	Short:   "Generate mock objects using testify",
 	Version: internal.Version,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+
+	},
 }
+
+var v *viper.Viper
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
+	rootCmd.AddCommand(
+		NewGenerateCmd(v),
+		NewShowConfigCmd(v),
+	)
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		internal.StackAndFail(err)
 	}
 }
 
 func init() {
+	v = viper.NewWithOptions(viper.KeyDelimiter("rf66bdg4ot554a00lil2k8o2ynjhi"))
+
 	cobra.OnInitialize(initConfig)
 
 	pflags := rootCmd.PersistentFlags()
-	pflags.StringVar(&cfgFile, "config", "", "config file (default is ./.makemock.yaml)")
+	pflags.StringVar(&cfgFile, "config", "", "config file (default is ./.makemocks.yaml)")
 	pflags.Bool("disable-color", false, "Disable coloring of log output")
 	pflags.StringP("log-level", "l", "info", "Log level. Choose from: debug, info, warn, error, fatal.")
-	viper.BindPFlags(pflags)
-
-	v := viper.GetViper()
-	rootCmd.AddCommand(NewGenerateCmd(v), NewShowConfigCmd(v))
+	v.BindPFlags(pflags)
 }
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
 	if cfgFile != "" {
 		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
+		v.SetConfigFile(cfgFile)
 	} else {
-		// Search config in home directory with name ".makemock" (without extension).
-		viper.AddConfigPath(".")
-		viper.SetConfigName(".makemocks")
+		// Search config in home directory with name ".makemocks" (without extension).
+		v.AddConfigPath(".")
+		v.SetConfigName(".makemocks")
 	}
 
-	viper.AutomaticEnv() // read in environment variables that match
-	viper.SetEnvPrefix("MAKEMOCK")
+	v.AutomaticEnv() // read in environment variables that match
+	v.SetEnvPrefix("MAKEMOCKS")
 
 	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
+	if err := v.ReadInConfig(); err == nil {
+		fmt.Println("Using config file:", v.ConfigFileUsed())
 	}
 }
 
 // GetGoodies returns the application goodies (namely, configuration and context).
-// Any return arguments besides error itself are undefined (i.e. possibly nill)
+// Any return arguments besides error itself are undefined (i.e. possibly nil)
 // on errors.
 func GetGoodies(v *viper.Viper) (*internal.Config, context.Context, error) {
 	config, err := internal.GetConfigFromViper(v)
