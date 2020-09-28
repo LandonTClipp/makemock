@@ -5,7 +5,10 @@ import "github.com/spf13/viper"
 // Version is the version of makemock
 var Version = "0.0.0-dev"
 
-// Config contains the configuration for the makemock application
+// Config contains the global configuration for the makemock application.
+// It is intended to be used to contain the marshalled application data.
+// Parameters in here will need to be passed to the command-specific config,
+// depending on what configuration the command needs.
 type Config struct {
 	// Config is the config file used, if any
 	Config string `mapstructure:"config"`

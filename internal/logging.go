@@ -10,6 +10,7 @@ import (
 )
 
 const (
+	LogKeyCommand = "command"
 	LogKeyVersion = "version"
 )
 

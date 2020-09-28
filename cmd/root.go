@@ -37,6 +37,9 @@ func init() {
 	pflags.Bool("disable-color", false, "Disable coloring of log output")
 	pflags.StringP("log-level", "l", "info", "Log level. Choose from: debug, info, warn, error, fatal.")
 	viper.BindPFlags(pflags)
+
+	v := viper.GetViper()
+	rootCmd.AddCommand(NewGenerateCmd(v))
 }
 
 // initConfig reads in config file and ENV variables if set.
