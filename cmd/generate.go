@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"strings"
 
 	"github.com/LandonTClipp/makemocks/internal"
 	"github.com/pkg/errors"
@@ -67,6 +68,7 @@ func (g *Generate) Run(ctx context.Context) error {
 		}
 		packageNames = append(packageNames, name)
 	}
+	log.Info().Msgf("loading packages: %s", strings.Join(packageNames, ", "))
 	foundPackages, err := packages.Load(nil, packageNames...)
 	if err != nil {
 		return errors.Wrapf(err, "failed to load packages")
