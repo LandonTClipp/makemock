@@ -1,0 +1,7 @@
+log-level: debug
+packages:
+    DEFAULT:
+        test1: "default1"
+        test2: "default2"
+    github.com/LandonTClipp/makemocks/...:
+        test2: "hello world"

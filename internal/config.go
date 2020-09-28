@@ -15,7 +15,8 @@ type Config struct {
 	// DisableColor disables coloring of log messages
 	DisableColor bool `mapstructure:"disable-color"`
 	// LogLevel is the level of the logger
-	LogLevel string `mapstructure:"log-level"`
+	LogLevel string             `mapstructure:"log-level"`
+	Packages map[string]Package `mapstructure:"packages"`
 }
 
 // GetConfigDefault returns a Config struct with the application
@@ -35,3 +36,12 @@ func GetConfigFromViper(v *viper.Viper) (*Config, error) {
 	c := GetConfigDefault()
 	return c, viper.UnmarshalExact(c)
 }
+
+type Package struct {
+	Test1 string `mapstructure:"test1"`
+	Test2 string `mapstructure:"test2"`
+}
+
+const (
+	PackageDefault = "DEFAULT"
+)

@@ -3,7 +3,7 @@ package cmd
 import (
 	"context"
 
-	"github.com/LandonTClipp/makemock/internal"
+	"github.com/LandonTClipp/makemocks/internal"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
@@ -17,11 +17,13 @@ func NewGenerateCmd(v *viper.Viper) *cobra.Command {
 		Use:   "generate",
 		Short: "Generate mocks",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			_, ctx, err := GetGoodies(v)
+			config, ctx, err := GetGoodies(v)
 			if err != nil {
 				internal.StackAndFail(err)
 			}
-			generate, err := GetGenerateFromConfig(&GenerateConfig{})
+			generate, err := GetGenerateFromConfig(&GenerateConfig{
+				Packages: config.Packages,
+			})
 			if err != nil {
 				internal.StackAndFail(err)
 			}
@@ -33,7 +35,9 @@ func NewGenerateCmd(v *viper.Viper) *cobra.Command {
 	}
 }
 
-type GenerateConfig struct{}
+type GenerateConfig struct {
+	Packages map[string]internal.Package
+}
 
 // Generate is the application object for the generate command
 type Generate struct {
@@ -52,12 +56,18 @@ func (g *Generate) Run(ctx context.Context) error {
 	log := zerolog.Ctx(ctx).With().Str(internal.LogKeyCommand, "generate").Logger()
 	ctx = log.WithContext(ctx)
 
-	log.Debug().Msgf("hello")
-	log.Info().Msgf("hello")
-	log.Warn().Msgf("Hello")
-	log.Error().Msgf("Hello")
-
-	foundPackages, err := packages.Load(nil, "github.com/LandonTClipp/makemock/...")
+	log.Debug().Msgf("%+v", g.Config)
+	packageNames := []string{}
+	for name, val := range g.Config.Packages {
+		log.Debug().Msgf(name)
+		log.Debug().Msgf(val.Test1)
+		log.Debug().Msgf(val.Test2)
+		if name == internal.PackageDefault {
+			continue
+		}
+		packageNames = append(packageNames, name)
+	}
+	foundPackages, err := packages.Load(nil, packageNames...)
 	if err != nil {
 		return errors.Wrapf(err, "failed to load packages")
 	}

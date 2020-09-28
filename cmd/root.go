@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/LandonTClipp/makemock/internal"
+	"github.com/LandonTClipp/makemocks/internal"
 	"github.com/spf13/cobra"
 
 	"github.com/spf13/viper"
@@ -15,7 +15,7 @@ var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:     "makemock",
+	Use:     "makemocks",
 	Short:   "Generate mock objects using testify",
 	Version: internal.Version,
 }
@@ -39,7 +39,7 @@ func init() {
 	viper.BindPFlags(pflags)
 
 	v := viper.GetViper()
-	rootCmd.AddCommand(NewGenerateCmd(v))
+	rootCmd.AddCommand(NewGenerateCmd(v), NewShowConfigCmd(v))
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -50,7 +50,7 @@ func initConfig() {
 	} else {
 		// Search config in home directory with name ".makemock" (without extension).
 		viper.AddConfigPath(".")
-		viper.SetConfigName(".makemock")
+		viper.SetConfigName(".makemocks")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
