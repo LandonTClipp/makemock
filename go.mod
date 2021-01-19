@@ -4,6 +4,7 @@ go 1.15
 
 require (
 	github.com/LandonTClipp/makemock v0.0.0-20200928033019-5704b69c8e57
+	github.com/chigopher/pathlib v0.12.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.20.0

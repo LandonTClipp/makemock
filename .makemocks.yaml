@@ -1,6 +1,5 @@
 log-level: debug
 disable-color: True
-config: "hello"
 packages:
     DEFAULT:
         test1: test1_default

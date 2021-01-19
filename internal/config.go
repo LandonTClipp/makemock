@@ -1,8 +1,10 @@
 package internal
 
 import (
+	"github.com/chigopher/pathlib"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
+	"gopkg.in/yaml.v2"
 )
 
 // Version is the version of makemock
@@ -38,7 +40,24 @@ func GetConfigDefault() *Config {
 // will be initialized to a default value.
 func GetConfigFromViper(v *viper.Viper) (*Config, error) {
 	c := GetConfigDefault()
-	return c, errors.Wrapf(v.UnmarshalExact(c), "failed to unmarshal")
+	if err := v.UnmarshalExact(c); err != nil {
+		return c, errors.Wrapf(err, "failed to unmarshal")
+	}
+	// Because of an issue with viper (https://github.com/spf13/viper/issues/1014),
+	// configuration keys become case insensitive. We need to hack around the
+	// `packages` key in order for the configuration here to be case-sensitive.
+	// So, unmarshal the raw yaml and replace c.Packages with the result of that.
+	configPath := pathlib.NewPath(v.ConfigFileUsed())
+	configBytes, err := configPath.ReadFile()
+	if err != nil {
+		return c, errors.Wrapf(err, "failed to read config file")
+	}
+	cRaw := &Config{}
+	if err := yaml.Unmarshal(configBytes, cRaw); err != nil {
+		return c, errors.Wrapf(err, "failed to unmarshal config yaml")
+	}
+	c.Packages = cRaw.Packages
+	return c, nil
 }
 
 type Package struct {

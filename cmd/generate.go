@@ -2,6 +2,9 @@ package cmd
 
 import (
 	"context"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"strings"
 
 	"github.com/LandonTClipp/makemocks/internal"
@@ -52,6 +55,12 @@ func GetGenerateFromConfig(c *GenerateConfig) (*Generate, error) {
 	}, nil
 }
 
+type parserEntry struct {
+	fileName string
+	pkg      *packages.Package
+	syntax   *ast.File
+}
+
 // Run runs the command
 func (g *Generate) Run(ctx context.Context) error {
 	log := zerolog.Ctx(ctx).With().Str(internal.LogKeyCommand, "generate").Logger()
@@ -69,12 +78,58 @@ func (g *Generate) Run(ctx context.Context) error {
 		packageNames = append(packageNames, name)
 	}
 	log.Info().Msgf("loading packages: %s", strings.Join(packageNames, ", "))
-	foundPackages, err := packages.Load(nil, packageNames...)
+	foundPackages, err := packages.Load(&packages.Config{
+		Mode: packages.NeedFiles | packages.NeedSyntax,
+	}, packageNames...)
 	if err != nil {
 		return errors.Wrapf(err, "failed to load packages")
 	}
+
+	parsers := []*ast.File{}
+
 	for _, p := range foundPackages {
+		if len(p.Errors) > 0 {
+			return p.Errors[0]
+		}
 		log.Info().Msgf(p.PkgPath)
+		for _, f := range p.GoFiles {
+			log.Info().Msgf(f)
+			fset := token.NewFileSet()
+			fileParser, err := parser.ParseFile(fset, f, nil, parser.ParseComments)
+			if err != nil {
+				return errors.Wrapf(err, "failed to parser file")
+			}
+			parsers = append(parsers, fileParser)
+		}
+	}
+
+	for _, fileParser := range parsers {
+		fileLog := log.With().Str("file", fileParser.Name.Name).Logger()
+		fileLog.Info().Msgf("printing declared functions")
+
+		for _, f := range fileParser.Decls {
+			fn, ok := f.(*ast.FuncDecl)
+			if !ok {
+				continue
+			}
+			fileLog.Info().Msgf(fn.Name.Name)
+		}
+
+		fileLog.Info().Msgf("printing declared interfaces")
+
+		for _, node := range parsers {
+			ast.Inspect(node, func(n ast.Node) bool {
+				switch t := n.(type) {
+				case *ast.TypeSpec:
+					switch t.Type.(type) {
+					case *ast.InterfaceType:
+						log.Info().Msgf(t.Name.Name)
+					}
+				}
+				return true
+			})
+
+		}
 	}
 	return nil
 }
